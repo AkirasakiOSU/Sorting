@@ -76,15 +76,8 @@ public:
 template<typename T>
 std::vector<T> ShellSotring<T>::sort(std::vector<T> const &vec, std::function<bool(T const &, T const &)> const &comp) const {
     auto R = vec;
-    int t = static_cast<int>(std::log2(R.size()));
-    std::vector<int> h(t, 0);
-    h[t-1] = R.size()/2;
-    for(auto i = t-2; i >= 0; i--) {
-        h[i] = h[i+1]/2;
-    }
-    for(int s = t-1; s >= 0; s--) {
-        int curH = h[s],
-        j = curH;
+    for(auto h = R.size()/2; h; h /=2) {
+        int curH = h, j = curH;
         while(j < R.size()) {
             int i = j-curH;
             T k = R[j];
