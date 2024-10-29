@@ -81,14 +81,96 @@ std::vector<T> ShellSotring<T>::sort(std::vector<T> const &vec, std::function<bo
         while(j < R.size()) {
             int i = j-curH;
             T k = R[j];
-            while(i>=0) {
-                if(comp(k, R[i])) break;
+            while(i>=0 && comp(k, R[i])) {
                 R[i+curH] = R[i];
                 i -= curH;
             }
             R[i+curH] = k;
             ++j;
         }
+    }
+    return R;
+}
+
+template<typename T>
+class BubbleSotring : public Sorting<T> {
+public:
+    BubbleSotring() = default;
+    std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
+    ~BubbleSotring() override = default;
+};
+
+template<typename T>
+std::vector<T> BubbleSotring<T>::sort(std::vector<T> const &vec, std::function<bool(T const &, T const &)> const &comp) const {
+    auto R = vec;
+    for(auto i = 0; i < vec.size(); ++i) {
+        for(auto j = 1; j < vec.size() - i; ++j) {
+            if(comp(R[j], R[j-1])) std::swap(R[j], R[j-1]);
+        }
+    }
+    return R;
+}
+
+template<typename T>
+class QuickSotring : public Sorting<T> {
+private:
+    void qSort(typename std::vector<T>::iterator , typename std::vector<T>::iterator , std::function<bool(T const &, T const &)> const &) const;
+public:
+    QuickSotring() = default;
+    std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
+    ~QuickSotring() override = default;
+};
+
+template<typename T>
+void QuickSotring<T>::qSort(typename std::vector<T>::iterator first, typename std::vector<T>::iterator last, std::function<bool(T const &, T const &)> const &comp) const {
+    if (first >= last) return;
+    T pivo = *(first + std::distance(first, last) / 2);
+    auto iLeft = first;
+    auto iRight = last;
+    while (iLeft <= iRight) {
+        while (comp(*iLeft, pivo)) {
+            ++iLeft;
+        }
+        while (comp(pivo, *iRight)) {
+            --iRight;
+        }
+        if (iLeft <= iRight) {
+            std::iter_swap(iLeft, iRight);
+            ++iLeft;
+            --iRight;
+        }
+    }
+    if (first < iRight) qSort(first, iRight, comp);
+    if (iLeft < last) qSort(iLeft, last, comp);
+}
+
+template<typename T>
+std::vector<T> QuickSotring<T>::sort(std::vector<T> const &vec, std::function<bool(T const &, T const &)> const &comp) const {
+    std::vector<T> R = vec;
+    qSort(R.begin(), R.end() - 1, comp);
+    return R;
+}
+
+template<typename T>
+class SelectingSotring : public Sorting<T> {
+public:
+    SelectingSotring() = default;
+    std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
+    ~SelectingSotring() override = default;
+};
+
+template<typename T>
+std::vector<T> SelectingSotring<T>::sort(std::vector<T> const &vec, std::function<bool(T const &, T const &)> const &comp) const {
+    auto R = vec;
+    typename std::vector<T>::iterator iMax = R.begin(), iLast = (R.end() - 1), iCur = R.begin() + 1;
+    for(auto i = 0; i < R.size(); ++i) {
+        while(iCur <= (iLast - i)) {
+            if(!comp(*iCur, *iMax)) iMax = iCur;
+            ++iCur;
+        }
+        std::iter_swap(iMax, iCur - 1);
+        iMax = R.begin();
+        iCur = iMax + 1;
     }
     return R;
 }
