@@ -4,10 +4,13 @@
 
 #ifndef SORT_H
 #define SORT_H
-#include <functional>
+#include <iostream>
 #include <vector>
+#include <string>
+#include <functional>
+#include <concepts>
+#include <type_traits>
 #include <algorithm>
-#include <cmath>
 
 
 template<typename T>
@@ -20,9 +23,7 @@ public:
 template<typename T>
 class CountingSorting final : public Sorting<T>  {
 public:
-    CountingSorting() = default;
     std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &,T const &)> const &) const override;
-    ~CountingSorting() override = default;
 };
 
 template<typename T>
@@ -42,11 +43,9 @@ std::vector<T> CountingSorting<T>::sort(std::vector<T> const &vec, std::function
 }
 
 template<typename T>
-class InsertingSotring : public Sorting<T> {
+class InsertingSotring final : public Sorting<T> {
 public:
-    InsertingSotring() = default;
     std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
-    ~InsertingSotring() override = default;
 };
 
 template<typename T>
@@ -66,11 +65,9 @@ std::vector<T> InsertingSotring<T>::sort(std::vector<T> const &vec, std::functio
 }
 
 template<typename T>
-class ShellSotring : public Sorting<T> {
+class ShellSotring final : public Sorting<T> {
 public:
-    ShellSotring() = default;
     std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
-    ~ShellSotring() override = default;
 };
 
 template<typename T>
@@ -93,11 +90,9 @@ std::vector<T> ShellSotring<T>::sort(std::vector<T> const &vec, std::function<bo
 }
 
 template<typename T>
-class BubbleSotring : public Sorting<T> {
+class BubbleSotring final : public Sorting<T> {
 public:
-    BubbleSotring() = default;
     std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
-    ~BubbleSotring() override = default;
 };
 
 template<typename T>
@@ -112,17 +107,15 @@ std::vector<T> BubbleSotring<T>::sort(std::vector<T> const &vec, std::function<b
 }
 
 template<typename T>
-class QuickSotring : public Sorting<T> {
+class QuickSotring final : public Sorting<T> {
 private:
-    void qSort(typename std::vector<T>::iterator , typename std::vector<T>::iterator , std::function<bool(T const &, T const &)> const &) const;
+    void qSort(typename std::vector<T>::iterator &, typename std::vector<T>::iterator &, std::function<bool(T const &, T const &)> const &) const;
 public:
-    QuickSotring() = default;
     std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
-    ~QuickSotring() override = default;
 };
 
 template<typename T>
-void QuickSotring<T>::qSort(typename std::vector<T>::iterator first, typename std::vector<T>::iterator last, std::function<bool(T const &, T const &)> const &comp) const {
+void QuickSotring<T>::qSort(typename std::vector<T>::iterator &first, typename std::vector<T>::iterator &last, std::function<bool(T const &, T const &)> const &comp) const {
     if (first >= last) return;
     T pivo = *(first + std::distance(first, last) / 2);
     auto iLeft = first;
@@ -147,16 +140,16 @@ void QuickSotring<T>::qSort(typename std::vector<T>::iterator first, typename st
 template<typename T>
 std::vector<T> QuickSotring<T>::sort(std::vector<T> const &vec, std::function<bool(T const &, T const &)> const &comp) const {
     std::vector<T> R = vec;
-    qSort(R.begin(), R.end() - 1, comp);
+    auto b = R.begin(), e = R.end() - 1;
+    qSort(b, e, comp);
     return R;
 }
 
 template<typename T>
-class SelectingSotring : public Sorting<T> {
+class SelectingSotring final : public Sorting<T>{
 public:
     SelectingSotring() = default;
     std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
-    ~SelectingSotring() override = default;
 };
 
 template<typename T>
@@ -174,4 +167,87 @@ std::vector<T> SelectingSotring<T>::sort(std::vector<T> const &vec, std::functio
     }
     return R;
 }
+
+template <typename T>
+class HeapSorting final : public Sorting<T> {
+private:
+
+    void heapify(typename std::vector<T>::iterator, typename std::vector<T>::iterator,
+             typename std::vector<T>::iterator, std::function<bool(const T &, const T &)> const &) const;
+
+public:
+    HeapSorting() = default;
+    std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
+
+};
+
+template<typename T>
+void HeapSorting<T>::heapify(typename std::vector<T>::iterator begin, typename std::vector<T>::iterator end,
+             typename std::vector<T>::iterator root, std::function<bool(const T &, const T &)> const &comparator) const {
+    auto size = std::distance(begin, end);
+    auto rootIndex = std::distance(begin, root);
+    T k = *root;
+    auto j = rootIndex;
+    while (2 * j + 1 < size) {
+        auto i = 2 * j + 1;
+        auto childIt = begin + i;
+        if (i + 1 < size && comparator(*(childIt), *(childIt + 1))) {
+            ++i;
+            ++childIt;
+        }
+        if (comparator(*childIt, k)) {
+            break;
+        }
+        *(begin + j) = *childIt;
+        j = i;
+    }
+    *(begin + j) = k;
+}
+
+template<typename T>
+std::vector<T> HeapSorting<T>::sort(std::vector<T> const &v, std::function<bool(T const &, T const &)> const &comp) const{
+    auto vec = v;
+    auto begin = vec.begin();
+    auto end = vec.end();
+    for (auto it = begin + (vec.size() / 2) - 1; it >= begin; --it) {
+        heapify(begin, end, it, comp);
+    }
+    for (auto it = end - 1; it > begin; --it) {
+        std::swap(*begin, *it);
+        heapify(begin, it, begin, comp);
+    }
+    return vec;
+}
+
+template <typename T>
+concept Integral = std::is_integral_v<T>;
+
+template <Integral T>
+class RadixSorting final : public Sorting<T>
+{
+    CountingSorting<T> count;
+public:
+    RadixSorting() = default;
+    std::vector<T> sort(std::vector<T> const &, std::function<bool(T const &, T const &)> const &) const override;
+
+};
+
+template <Integral T>
+std::vector<T> RadixSorting<T>::sort(std::vector<T> const &vec, std::function<bool(T const &, T const &)> const &comp) const
+{
+    if (vec.empty()) {
+        return vec;
+    }
+    T maxElement = *std::max_element(vec.begin(), vec.end(), comp);
+    int maxDigits = static_cast<int>(std::log10(maxElement)) + 1;
+    std::vector<T> result = vec;
+    for (int exp = 1; maxDigits > 0; exp *= 10, --maxDigits) {
+        result = count.sort(result, [&exp](T const &a, T const &b) {
+            return (a / exp) % 10 < (b / exp) % 10;
+        });
+    }
+    return result;
+}
+
+
 #endif //SORT_H
